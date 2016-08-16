@@ -26,13 +26,15 @@
     "ws": "^0.4.32"
   },
   "devDependencies": {
+    "babel-register": "^6.11.6",
     "koa": "^1.2.1",
     "koa-router": "^5.4.0",
     "nodeunit": "^0.9.1",
     "proxy-eval": ">=1.1.2"
   },
   "scripts": {
-    "test": "sh test/test.sh"
+    "test_old": "sh test/test.sh",
+    "test": "jasmine JASMINE_CONFIG_PATH=./jasmine.json"
   },
   "optionalDependencies": {},
   "repository": {
