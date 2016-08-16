@@ -19,9 +19,7 @@ describe('Test request without proxy rules', () => {
     proxyGet(getUrl, getParam, CommonRequestHeader ).then((proxyRes) => {
       directGet(getUrl, getParam, CommonRequestHeader).then(directRes => {
         expect(isObjectEqual(directRes.req._headers, proxyRes.req._headers)).toBe(true);
-
-        // console.log('direct response headers', directRes.headers);
-        // console.log('proxy response headers', proxyRes.headers);
+        expect(directRes.req.url).toEqual(proxyRes.req.url);
         expect(directRes.headers['content-type']).toEqual(proxyRes.headers['content-type']);
         expect(directRes.body).toEqual(proxyRes.body);
         done();
@@ -44,7 +42,10 @@ describe('Test request without proxy rules', () => {
       directPost(url, param, CommonRequestHeader).then(directRes => {
         expect(isObjectEqual(directRes.req._headers, proxyRes.req._headers)).toBe(true);
         expect(directRes.headers['content-type']).toEqual(proxyRes.headers['content-type']);
+
         expect(directRes.body).toEqual(proxyRes.body);
+        expect(directRes.headers.reqbody).toEqual(JSON.stringify(param));
+        expect(directRes.req.body).toEqual(proxyRes.req.body);
         done();
       }, error => {
         console.error('error in direct post:', error);

@@ -28,6 +28,7 @@
   "devDependencies": {
     "babel-register": "^6.11.6",
     "koa": "^1.2.1",
+    "koa-body": "^1.4.0",
     "koa-router": "^5.4.0",
     "nodeunit": "^0.9.1",
     "proxy-eval": ">=1.1.2"

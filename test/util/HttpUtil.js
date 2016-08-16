@@ -49,7 +49,8 @@ function getPathFromUrl (url = '') {
 
 function proxyRequest (method = 'GET', url, params, headers = {}) {
   const requestData = querystring.stringify(params);
-  const actualPath = url + '?' + requestData;
+
+  let actualPath = method === 'GET' ? url + '?' + requestData : url;
 
   const host = getHostFromUrl(url);
   const requestOptions = Object.assign({}, DEFAULT_PROXY_OPTIONS, {
@@ -59,6 +60,7 @@ function proxyRequest (method = 'GET', url, params, headers = {}) {
   requestOptions.headers = Object.assign({}, requestOptions.headers, headers);
 
   requestOptions.headers.Host = host || DEFAULT_HOST;
+
   if (method === 'POST') {
     requestOptions.headers['Content-Length'] = Buffer.byteLength(requestData);
   }
@@ -98,7 +100,7 @@ function proxyRequest (method = 'GET', url, params, headers = {}) {
 */
 function directRequest (method = 'GET', url, params, headers = {}) {
   const requestData = querystring.stringify(params);
-  const actualPath = url + '?' + requestData;
+  let actualPath = method === 'GET' ? url + '?' + requestData : url;
 
   const host = getHostFromUrl(url);
   const requestOptions = Object.assign({}, DEFAULT_OPTIONS, {
@@ -110,6 +112,7 @@ function directRequest (method = 'GET', url, params, headers = {}) {
   requestOptions.headers = Object.assign({}, headers);
 
   requestOptions.headers.Host = host || DEFAULT_HOST;
+
   if (method === 'POST') {
     requestOptions.headers['Content-Length'] = Buffer.byteLength(requestData);
   }
