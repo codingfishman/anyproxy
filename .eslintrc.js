@@ -47,7 +47,8 @@ module.exports = {
 
   "globals": {
     "goog": true,
-    "module": true
+    "module": true,
+    "exports": true
   },
 
   "plugins": [
