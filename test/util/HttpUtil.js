@@ -49,11 +49,11 @@ function getPathFromUrl (url = '') {
 
 function proxyRequest (method = 'GET', url, params, headers = {}) {
   const requestData = querystring.stringify(params);
-  const actualPath = url + requestData;
+  const actualPath = url + '?' + requestData;
 
   const host = getHostFromUrl(url);
   const requestOptions = Object.assign({}, DEFAULT_PROXY_OPTIONS, {
-    path: url,
+    path: actualPath,
     method: method
   });
   requestOptions.headers = Object.assign({}, requestOptions.headers, headers);
@@ -98,13 +98,13 @@ function proxyRequest (method = 'GET', url, params, headers = {}) {
 */
 function directRequest (method = 'GET', url, params, headers = {}) {
   const requestData = querystring.stringify(params);
-  const actualPath = url + requestData;
+  const actualPath = url + '?' + requestData;
 
   const host = getHostFromUrl(url);
   const requestOptions = Object.assign({}, DEFAULT_OPTIONS, {
     method: method,
     host: host,
-    path: getPathFromUrl(url),
+    path: getPathFromUrl(actualPath),
     port: getPortFromUrl(url)
   });
   requestOptions.headers = Object.assign({}, headers);
