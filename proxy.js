@@ -82,7 +82,7 @@ function proxyServer(option){
 
     if(option.throttle){
         logUtil.printLog("throttle :" + option.throttle + "kb/s");
-        GLOBAL._throttle = new ThrottleGroup({rate: 1024 * parseInt(option.throttle) }); // rate - byte/sec
+        GLOBAL._throttle = new ThrottleGroup({rate: 1024 * parseFloat(option.throttle) }); // rate - byte/sec
     }
 
     requestHandler.setRules(proxyRules); //TODO : optimize calling for set rule
