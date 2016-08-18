@@ -6,6 +6,7 @@ const querystring = require('querystring');
 const http = require('http');
 const zlib = require('zlib');
 const Buffer = require('buffer').Buffer;
+const request = require('request');
 
 const DEFAULT_HOST = 'localhost';
 
@@ -48,25 +49,26 @@ function getPathFromUrl(url = '') {
 }
 
 function proxyRequest(method = 'GET', url, params, headers = {}) {
-    const requestData = querystring.stringify(params);
-
-    let actualPath = method === 'GET' ? url + '?' + requestData : url;
-
-    const host = getHostFromUrl(url);
-    const requestOptions = Object.assign({}, DEFAULT_PROXY_OPTIONS, {
-        path: actualPath,
-        method: method
+    const promise = new Promise((resolve, reject) => {
+        request(
+            {
+                proxy: 'http://localhost:8001',
+                method: method,
+                form: params,
+                url: url,
+                headers: headers
+            },
+            function (error, response, body) {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+                resolve(response);
+            }
+        );
     });
-    requestOptions.headers = Object.assign({}, requestOptions.headers, headers);
 
-    requestOptions.headers.Host = host || DEFAULT_HOST;
-
-    if (method === 'POST') {
-        requestOptions.headers['Content-Length'] = Buffer.byteLength(requestData);
-    }
-
-    // 发起请求
-    return doRequest(requestOptions, requestData);
+    return promise;
 }
 
 /*
@@ -74,65 +76,27 @@ function proxyRequest(method = 'GET', url, params, headers = {}) {
  *
  */
 function directRequest(method = 'GET', url, params, headers = {}) {
-    const requestData = querystring.stringify(params);
-    let actualPath = method === 'GET' ? url + '?' + requestData : url;
-
-    const host = getHostFromUrl(url);
-    const requestOptions = Object.assign({}, DEFAULT_OPTIONS, {
-        method: method,
-        host: host,
-        path: getPathFromUrl(actualPath),
-        port: getPortFromUrl(url)
-    });
-    requestOptions.headers = Object.assign({}, headers);
-
-    requestOptions.headers.Host = host || DEFAULT_HOST;
-
-    if (method === 'POST') {
-        requestOptions.headers['Content-Length'] = Buffer.byteLength(requestData);
-    }
-
-    // 发起请求
-    return doRequest(requestOptions, requestData);
-}
-
-// 发起最后的请求
-function doRequest(requestOptions, requestData) {
     const promise = new Promise((resolve, reject) => {
-        const req = http.request(requestOptions, (res) => {
-            const resData = [];
-            const ifServerGzipped = /gzip/i.test(res.headers['content-encoding']);
-            res.on('data', (chunk) => {
-                resData.push(chunk);
-            });
-
-            res.on('end', () => {
-                if (ifServerGzipped) {
-                    zlib.gunzip(resData, function(err, buff) {
-                        resData = buff;
-                    });
+        request(
+            {
+                method: method,
+                form: params,
+                url: url,
+                headers: headers
+            },
+            function (error, response, body) {
+                if (error) {
+                    reject(error);
+                    return;
                 }
-
-                const parsedData = Buffer.concat(resData).toString();
-
-                res.body = parsedData;
-
-                resolve(res);
-            });
-        });
-
-        req.on('error', (error) => {
-            reject(error);
-        });
-
-        if (requestOptions.method === 'POST') {
-            req.write(requestData);
-        }
-        req.end();
+                resolve(response);
+            }
+        );
     });
-
     return promise;
 }
+
+
 
 function proxyGet(url, params, headers = {}) {
     return proxyRequest('GET', url, params, headers);

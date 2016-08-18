@@ -33,7 +33,7 @@
     "koa-router": "^5.4.0",
     "koa-send": "^3.2.0",
     "nodeunit": "^0.9.1",
-    "proxy-eval": ">=1.1.2"
+    "request": "^2.74.0"
   },
   "scripts": {
     "test_old": "sh test/test.sh",
