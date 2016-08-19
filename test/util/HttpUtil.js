@@ -7,8 +7,10 @@ const http = require('http');
 const zlib = require('zlib');
 const Buffer = require('buffer').Buffer;
 const request = require('request');
+const fs = require('fs');
 
 const DEFAULT_HOST = 'localhost';
+const PROXY_HOST = 'http://localhost:8001';
 
 const DEFAULT_PROXY_OPTIONS = {
     port: 8001, // proxy的端口
@@ -20,14 +22,14 @@ const DEFAULT_OPTIONS = {
 
 };
 
-function getHostFromUrl(url = '') {
+function getHostFromUrl (url = '') {
     const hostReg = /^(https{0,1}:\/\/)(\w+)/;
     const match = url.match(hostReg);
 
     return match && match[2] ? match[2] : '';
 }
 
-function getPortFromUrl(url = '') {
+function getPortFromUrl (url = '') {
     const portReg = /^https{0,1}:\/\/\w+(:(\d+)){0,1}/;
     const match = url.match(portReg);
     let port = match && match[2] ? match[2] : '';
@@ -41,49 +43,47 @@ function getPortFromUrl(url = '') {
 /**
  * 获取url中的path
  */
-function getPathFromUrl(url = '') {
+function getPathFromUrl (url = '') {
     const pathReg = /^https{0,1}:\/\/\w+(:\d+){0,1}(.+)/;
     const match = url.match(pathReg);
     const path = match && match[3] ? match[2] : url;
     return path;
 }
 
-function proxyRequest(method = 'GET', url, params, headers = {}) {
-    const promise = new Promise((resolve, reject) => {
-        request(
-            {
-                proxy: 'http://localhost:8001',
-                method: method,
-                form: params,
-                url: url,
-                headers: headers
-            },
-            function (error, response, body) {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-                resolve(response);
-            }
-        );
-    });
-
-    return promise;
+function proxyRequest (method = 'GET', url, params, headers = {}) {
+    return doRequest(method, url, params, headers, true);
 }
 
 /*
  * 直接请求到真实服务器，不经过代理服务器
  *
  */
-function directRequest(method = 'GET', url, params, headers = {}) {
+function directRequest (method = 'GET', url, params, headers = {}) {
+    return doRequest(method, url, params, headers);
+}
+
+function directUpload (url, filepath, headers = {}) {
+    return doUpload(url, filepath, headers);
+}
+
+function proxyUpload (url, filepath, headers = {}) {
+    return doUpload(url, filepath, headers, true);
+}
+
+function doRequest (method = 'GET', url, params, headers = {}, isProxy) {
+    const requestData = {
+        method: method,
+        form: params,
+        url: url,
+        headers: headers
+    };
+
+    if (isProxy) {
+        requestData.proxy = PROXY_HOST;
+    }
     const promise = new Promise((resolve, reject) => {
         request(
-            {
-                method: method,
-                form: params,
-                url: url,
-                headers: headers
-            },
+            requestData,
             function (error, response, body) {
                 if (error) {
                     reject(error);
@@ -96,21 +96,48 @@ function directRequest(method = 'GET', url, params, headers = {}) {
     return promise;
 }
 
+function doUpload (url, filepath, headers = {}, isProxy) {
+    const requestData = {
+        formData: {
+            param: 'something in param',
+            file: fs.createReadStream(filepath)
+        },
+        url: url,
+        headers: headers,
+        json: true
+    };
 
+    if (isProxy) {
+        requestData.proxy = PROXY_HOST;
+    }
+    const promise = new Promise((resolve, reject) => {
+        request.post(
+            requestData,
+            function (error, response, body) {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+                resolve(response);
+            }
+        );
+    });
+    return promise;
+}
 
-function proxyGet(url, params, headers = {}) {
+function proxyGet (url, params, headers = {}) {
     return proxyRequest('GET', url, params, headers);
 }
 
-function proxyPost(url, params, headers = {}) {
+function proxyPost (url, params, headers = {}) {
     return proxyRequest('POST', url, params, headers);
 }
 
-function directGet(url, params, headers = {}) {
+function directGet (url, params, headers = {}) {
     return directRequest('GET', url, params, headers);
 }
 
-function directPost(url, params, headers = {}) {
+function directPost (url, params, headers = {}) {
     return directRequest('POST', url, params, headers);
 }
 
@@ -118,5 +145,7 @@ module.exports = {
     proxyGet,
     proxyPost,
     directGet,
-    directPost
+    directPost,
+    directUpload,
+    proxyUpload
 };
