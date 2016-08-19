@@ -47,12 +47,12 @@ function testRequest(protocol = 'http') {
                     done();
                 }, error => {
                     console.error('error happend in direct get:', error);
-                    done();
+                    done.fail('error happend in direct get');
                 });
 
             }, error => {
                 console.log('error happened in proxy get:', error);
-                done();
+                done.fail('error happend in proxy get');
             });
         });
 
@@ -78,12 +78,12 @@ function testRequest(protocol = 'http') {
                     done();
                 }, error => {
                     console.error('error in direct post:', error);
-                    done();
+                    done.fail('error happend in direct post');
                 });
 
             }, error => {
                 console.log('error happened in proxy post,', error);
-                done();
+                done.fail('error happend in proxy post');
             });
         });
 
@@ -158,10 +158,12 @@ function testRequest(protocol = 'http') {
                             expect(proxyRes.body).toEqual(directRes.body);
                             done();
                         }, error => {
-                            console.error('error in direct get json:', error);
+                            console.error('error in direct get :', filetype, error);
+                            done.fail(`error happend in direct get ${filetype}`);
                         });
                     }, error => {
-                        console.error('error in proxy get json :', error);
+                        console.error('error in proxy get :', filetype, error);
+                        done.fail(`error happend in proxy get ${filetype}`);
                     });
                 });
             }
@@ -193,20 +195,20 @@ function testRequest(protocol = 'http') {
                                                 done();
                                             }, error => {
                                                 console.error('error in comparing directUpload with proxy:\n',error);
-                                                done();
+                                                done.fail('error in comparing directUpload with proxy');
                                             });
                                         done();
                                     }, error => {
                                         console.error('error in comparing directUpload with local:\n',error);
-                                        done();
+                                        done.fail('error in comparing directUpload with local');
                                     });
                             }, error => {
                                 console.error('error in direct upload:', error);
-                                done();
+                                done.fail('error in direct upload');
                             });
                     }, error => {
                         console.error('error in proxy upload:', error);
-                        done();
+                        done.fail('error in proxy upload:');
                     });
             });
         });
