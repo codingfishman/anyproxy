@@ -1,10 +1,13 @@
 const http = require('http');
 const querystring = require('querystring');
+const path = require('path');
+const fs = require('fs');
 const Buffer = require('buffer').Buffer;
-const { proxyGet, proxyPost, directGet, directPost } = require('./util/HttpUtil.js');
+const { proxyGet, proxyPost, directGet, directPost, directUpload, proxyUpload } = require('./util/HttpUtil.js');
 const { CommonRequestHeader } = require('./data/headers.js');
 const { isObjectEqual } = require('./util/CommonUtil.js');
 const color = require('colorful');
+const streamEqual = require('stream-equal');
 
 describe('Test request without proxy rules', () => {
     beforeEach(function() {
@@ -31,10 +34,12 @@ describe('Test request without proxy rules', () => {
                 done();
             }, error => {
                 console.error('error happend in direct get:', error);
+                done();
             });
 
         }, error => {
             console.log('error happened in proxy get:', error);
+            done();
         });
     });
 
@@ -60,55 +65,15 @@ describe('Test request without proxy rules', () => {
                 done();
             }, error => {
                 console.error('error in direct post:', error);
+                done();
             });
 
         }, error => {
             console.log('error happened in proxy post,', error);
+            done();
         });
     });
 
-    // it('JPG file download without rules should be work as direct download', (done) => {
-    //     const url = 'http://localhost:3000/test/download/jpg';
-    //     const param = {};
-
-    //     proxyGet(url, param).then(proxyRes => {
-    //         directGet(url, param).then(directRes => {
-
-    //             expect(proxyRes.statusCode).toEqual(200);
-    //             expect(proxyRes.headers['content-type']).toEqual('image/jpeg');
-
-    //             expect(proxyRes.statusCode).toEqual(directRes.statusCode);
-    //             expect(proxyRes.headers['content-type']).toEqual(directRes.headers['content-type']);
-    //             expect(proxyRes.body).toEqual(directRes.body);
-    //             done();
-    //         }, error => {
-    //             console.error('error in direct get jpg:', error);
-    //         });
-    //     }, error => {
-    //         console.error('error in proxy get jpg :', error);
-    //     });
-    // });
-
-    // it('JSON file download without rules should be work as direct download', (done) => {
-    //     const url = 'http://localhost:3000/test/download/json';
-    //     const param = {};
-
-    //     proxyGet(url, param).then(proxyRes => {
-    //         directGet(url, param).then(directRes => {
-    //             expect(proxyRes.statusCode).toEqual(200);
-    //             expect(proxyRes.headers['content-type']).toEqual('application/json; charset=utf-8');
-
-    //             expect(proxyRes.statusCode).toEqual(directRes.statusCode);
-    //             expect(proxyRes.headers['content-type']).toEqual(directRes.headers['content-type']);
-    //             expect(proxyRes.body).toEqual(directRes.body);
-    //             done();
-    //         }, error => {
-    //             console.error('error in direct get json:', error);
-    //         });
-    //     }, error => {
-    //         console.error('error in proxy get json :', error);
-    //     });
-    // });
 
     describe('Test file download ', () => {
         const testArray = [
@@ -188,6 +153,51 @@ describe('Test request without proxy rules', () => {
             });
         }
 
+    });
+
+    describe('Test file upload', () => {
+        it('normal upload should be working', (done) => {
+            const url = 'http://localhost:3000/test/upload/jpg';
+            const filePath = path.resolve('./test/data/test.jpg');
+
+            proxyUpload(url, filePath)
+                .then(proxyRes => {
+                    directUpload(url, filePath)
+                        .then((directRes) => {
+                            expect(proxyRes.statusCode).toEqual(200);
+
+                            expect(proxyRes.statusCode).toEqual(directRes.statusCode);
+
+                            const directUploadedStream = fs.createReadStream(directRes.body);
+                            const proxyUploadedStream = fs.createReadStream(proxyRes.body);
+                            const localFileStream = fs.createReadStream(filePath);
+                            streamEqual(directUploadedStream, localFileStream)
+                                .then(isLocalEqual => {
+                                    expect(isLocalEqual).toBe(true);
+                                    streamEqual(directUploadedStream, proxyUploadedStream)
+                                        .then(isUploadedEqual => {
+                                            expect(isUploadedEqual).toBe(true);
+                                            done();
+                                        }, error => {
+                                            console.error('error in comparing directUpload with proxy:\n',error);
+                                            done();
+                                        });
+                                    done();
+                                }, error => {
+                                    console.error('error in comparing directUpload with local:\n',error);
+                                    done();
+                                });
+                        }, error => {
+                            console.error('error in direct upload:', error);
+                            done();
+                        });
+                }, error => {
+                    console.error('error in proxy upload:', error);
+                    done();
+                });
+
+
+        });
     });
 
 });

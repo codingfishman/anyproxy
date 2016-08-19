@@ -1,14 +1,14 @@
 const koa = require('koa');
 const app = koa();
 const router = require('koa-router')();
-const koaBody = require('koa-body')();
+const koaBody = require('koa-body');
 const serverStatic = require('koa-static');
 const mount = require('koa-mount');
 const send = require('koa-send');
 const path = require('path');
 const DEFAULT_PORT = 3000;
 
-router.post('/test/getuser', koaBody, function*(next) {
+router.post('/test/getuser', koaBody(), function *(next) {
     this.response.set('reqbody', JSON.stringify(this.request.body));
     this.response.body = 'something in post';
 });
@@ -20,22 +20,22 @@ router.get('/test', function*(next) {
     console.log('response in get:', this.response);
 });
 
-router.get('/test/download/jpg', function*(next) {
+router.get('/test/download/jpg', function *(next) {
     console.log('now download the jpg');
     yield send(this, 'test/data/test.jpg');
 });
 
-router.get('/test/download/webp', function*(next) {
+router.get('/test/download/webp', function *(next) {
     console.log('now download the webp');
     yield send(this, 'test/data/test.webp');
 });
 
-router.get('/test/download/json', function*(next) {
+router.get('/test/download/json', function *(next) {
     console.log('now download the json');
     yield send(this, 'test/data/test.json');
 });
 
-router.get('/test/download/js', function*(next) {
+router.get('/test/download/js', function *(next) {
     console.log('now download the js');
     yield send(this, 'test/data/test.js');
 });
@@ -45,30 +45,48 @@ router.get('/test/download/css', function*(next) {
     yield send(this, 'test/data/test.css');
 });
 
-router.get('/test/download/ttf', function*(next) {
+router.get('/test/download/ttf', function *(next) {
     console.log('now download the ttf');
     yield send(this, 'test/data/test.ttf');
 });
 
-router.get('/test/download/eot', function*(next) {
+router.get('/test/download/eot', function *(next) {
     console.log('now download the eot');
     yield send(this, 'test/data/test.eot');
 });
 
-router.get('/test/download/svg', function*(next) {
+router.get('/test/download/svg', function *(next) {
     console.log('now download the svg');
     yield send(this, 'test/data/test.svg');
 });
 
-router.get('/test/download/woff', function*(next) {
+router.get('/test/download/woff', function *(next) {
     console.log('now download the wof');
     yield send(this, 'test/data/test.woff');
 });
 
-router.get('/test/download/woff2', function*(next) {
+router.get('/test/download/woff2', function *(next) {
     console.log('now download the woff2');
     yield send(this, 'test/data/test.woff2');
 });
+
+router.post('/test/upload/jpg',
+    koaBody({
+        multipart: true,
+        formidable: {
+            uploadDir: './temp',
+            onFileBegin: function(name, file) {
+                file.name = 'test_upload_' + Date.now() + '.jpg';
+                var folder = path.dirname(file.path);
+                file.path = path.join(folder, file.name);
+            }
+        }
+    }),
+    function *(next) {
+        const file = this.request.body.files.file;
+        this.response.body = file.path;
+    }
+);
 
 app
     .use(router.routes())
