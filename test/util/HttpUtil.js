@@ -8,6 +8,11 @@ const zlib = require('zlib');
 const Buffer = require('buffer').Buffer;
 const request = require('request');
 const fs = require('fs');
+// const path = require('path');
+// const util = require('../../lib/util.js');
+
+// const certFile = fs.readFileSync(path.join(util.getUserHome(),"/.anyproxy_certs/localhost.crt"));
+// const certKey  = fs.readFileSync(path.join(util.getUserHome(),"/.anyproxy_certs/localhost.key"));
 
 const DEFAULT_HOST = 'localhost';
 const PROXY_HOST = 'http://localhost:8001';
@@ -75,12 +80,14 @@ function doRequest (method = 'GET', url, params, headers = {}, isProxy) {
         method: method,
         form: params,
         url: url,
-        headers: headers
+        headers: headers,
+        rejectUnauthorized: false
     };
 
     if (isProxy) {
         requestData.proxy = PROXY_HOST;
     }
+
     const promise = new Promise((resolve, reject) => {
         request(
             requestData,
@@ -104,7 +111,8 @@ function doUpload (url, filepath, headers = {}, isProxy) {
         },
         url: url,
         headers: headers,
-        json: true
+        json: true,
+        rejectUnauthorized: false
     };
 
     if (isProxy) {
