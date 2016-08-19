@@ -82,6 +82,10 @@ function proxyServer(option){
 
     if(option.throttle){
         logUtil.printLog("throttle :" + option.throttle + "kb/s");
+        const rate = 1024 * parseFloat(option.throttle);
+        if (rate < 1) {
+            throw new Error('Invalid throttle rate value', 'The rate value for throttle should be greater than 0.001');
+        }
         GLOBAL._throttle = new ThrottleGroup({rate: 1024 * parseFloat(option.throttle) }); // rate - byte/sec
     }
 
