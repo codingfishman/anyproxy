@@ -6,7 +6,10 @@ const serverStatic = require('koa-static');
 const mount = require('koa-mount');
 const send = require('koa-send');
 const path = require('path');
+const https = require('https');
+const certMgr = require("../lib/certMgr");
 const DEFAULT_PORT = 3000;
+const HTTPS_PORT = 3001;
 
 router.post('/test/getuser', koaBody(), function *(next) {
     this.response.set('reqbody', JSON.stringify(this.request.body));
@@ -88,8 +91,21 @@ router.post('/test/upload/jpg',
     }
 );
 
-app
-    .use(router.routes())
-    .listen(DEFAULT_PORT);
+app.use(router.routes());
+app.listen(DEFAULT_PORT);
+console.log('HTTP is now listening on port :' + DEFAULT_PORT);
 
-console.log('Now listening on port :' + DEFAULT_PORT);
+certMgr.getCertificate('localhost',function(error, keyContent, crtContent){
+    if(error){
+        console.error('failed to create https server:', error);
+    }else{
+        const httpsServer = https.createServer({
+            key: keyContent,
+            cert: crtContent
+        }, app.callback());
+
+        httpsServer.listen(HTTPS_PORT);
+        console.log('HTTPS is now listening on port :' + HTTPS_PORT);
+    }
+});
+
