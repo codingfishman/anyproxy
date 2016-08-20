@@ -15,9 +15,16 @@ router.post('/test/getuser', koaBody(), function *(next) {
     this.response.body = 'something in post';
 });
 
-router.get('/test', function*(next) {
+router.get('/test', function *(next) {
     console.log('request in get:', this.request);
     this.response.body = 'something';
+    this.response.__req = this.request;
+    console.log('response in get:', this.response);
+});
+
+router.get('/test/uselocal', function *(next) {
+    console.log('request in get local:', this.request);
+    this.response.body = 'something should be in local';
     this.response.__req = this.request;
     console.log('response in get:', this.response);
 });
@@ -70,6 +77,15 @@ router.get('/test/download/woff', function *(next) {
 router.get('/test/download/woff2', function *(next) {
     console.log('now download the woff2');
     yield send(this, 'test/data/test.woff2');
+});
+
+router.get('/test/download/bigfile', function *(next) {
+    console.log('now download the big file');
+    try {
+        yield send(this, 'sherlock.rmvb', {root: '/Users/fishman/Downloads/'});
+    } catch (e) {
+        console.error('error happened in big file downloading: ', e);
+    }
 });
 
 router.post('/test/upload/jpg',
