@@ -27,7 +27,10 @@
     "ws": "^0.4.32"
   },
   "devDependencies": {
+    "babel-preset-es2015": "^6.13.2",
+    "babel-preset-stage-0": "^6.5.0",
     "babel-register": "^6.11.6",
+    "jasmine": "^2.4.1",
     "koa": "^1.2.1",
     "koa-body": "^1.4.0",
     "koa-router": "^5.4.0",
@@ -38,7 +41,8 @@
   },
   "scripts": {
     "test_old": "sh test/test.sh",
-    "test": "jasmine JASMINE_CONFIG_PATH=./jasmine.json"
+    "test": "jasmine JASMINE_CONFIG_PATH=./jasmine.json",
+    "server": "node server/server.js"
   },
   "optionalDependencies": {},
   "repository": {
