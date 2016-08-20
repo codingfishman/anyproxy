@@ -2,12 +2,11 @@ const koa = require('koa');
 const app = koa();
 const router = require('koa-router')();
 const koaBody = require('koa-body');
-const serverStatic = require('koa-static');
-const mount = require('koa-mount');
 const send = require('koa-send');
 const path = require('path');
 const https = require('https');
 const certMgr = require("../lib/certMgr");
+const fs = require('fs');
 const DEFAULT_PORT = 3000;
 const HTTPS_PORT = 3001;
 
@@ -77,8 +76,17 @@ router.post('/test/upload/jpg',
     koaBody({
         multipart: true,
         formidable: {
-            uploadDir: './temp',
+            uploadDir: './test/temp',
             onFileBegin: function(name, file) {
+
+                if(!fs.existsSync('./test/temp')){
+                    try{
+                        fs.mkdirSync('./test/temp', 0777);
+                    }catch(e){
+                        return null;
+                    }
+                }
+
                 file.name = 'test_upload_' + Date.now() + '.jpg';
                 var folder = path.dirname(file.path);
                 file.path = path.join(folder, file.name);
