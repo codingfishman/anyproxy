@@ -17,6 +17,10 @@ const fs = require('fs');
 const DEFAULT_HOST = 'localhost';
 const PROXY_HOST = 'http://localhost:8001';
 
+
+const HTTP_SERVER_BASE = 'http://localhost:3000';
+const HTTPS_SERVER_BASE = 'https://localhost:3001';
+
 const DEFAULT_PROXY_OPTIONS = {
     port: 8001, // proxy的端口
     method: 'GET',
@@ -149,11 +153,20 @@ function directPost (url, params, headers = {}) {
     return directRequest('POST', url, params, headers);
 }
 
+/**
+* generate the final url based on protocol and path
+*
+*/
+function generateUrl (protocol, urlPath) {
+    return protocol === 'http' ? HTTP_SERVER_BASE + urlPath : HTTPS_SERVER_BASE + urlPath;
+}
+
 module.exports = {
     proxyGet,
     proxyPost,
     directGet,
     directPost,
     directUpload,
-    proxyUpload
+    proxyUpload,
+    generateUrl
 };

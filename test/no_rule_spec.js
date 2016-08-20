@@ -3,14 +3,13 @@ const querystring = require('querystring');
 const path = require('path');
 const fs = require('fs');
 const Buffer = require('buffer').Buffer;
-const { proxyGet, proxyPost, directGet, directPost, directUpload, proxyUpload } = require('./util/HttpUtil.js');
+const { proxyGet, proxyPost, directGet, directPost, directUpload, proxyUpload, generateUrl } = require('./util/HttpUtil.js');
 const { CommonRequestHeader } = require('./data/headers.js');
 const { isObjectEqual } = require('./util/CommonUtil.js');
 const color = require('colorful');
 const streamEqual = require('stream-equal');
 
-const httpServerBase = 'http://localhost:3000';
-const httpsServerBase = 'https://localhost:3001';
+const ProxyServerUtil = require('./util/ProxyServerUtil.js');
 
 testRequest('http');
 testRequest('https');
@@ -19,13 +18,25 @@ testRequest('https');
 function testRequest(protocol = 'http') {
 
     function constructUrl(urlPath) {
-        return protocol === 'http' ? httpServerBase + urlPath : httpsServerBase + urlPath;
+        return generateUrl(protocol, urlPath);
     }
 
     describe('Test request without proxy rules', () => {
-        beforeEach(function() {
-            jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
+        let proxyServer ;
+
+        beforeAll((done) => {
+            jasmine.DEFAULT_TIMEOUT_INTERVAL = 200000;
+
+            proxyServer = ProxyServerUtil.defaultProxyServer();
+            setTimeout(function() {
+                done();
+            }, 2000);
         });
+
+        afterAll(() => {
+            proxyServer && proxyServer.close();
+        });
+
 
         it('Get should work as direct without proxy rules', (done) => {
             const getUrl = constructUrl('/test');
@@ -212,5 +223,29 @@ function testRequest(protocol = 'http') {
                     });
             });
         });
+
+        // describe('Test Big file download', () => {
+        //     const url = '/test/download/bigfile';
+        //     const param = {};
+        //     it('BIG file downlaod should be working', (done) => {
+        //         directGet(url, param).then(proxyRes => {
+        //             directGet(url, param).then(directRes => {
+        //                 expect(proxyRes.statusCode).toEqual(200);
+        //                 expect(proxyRes.headers['content-type']).toEqual(contentType);
+
+        //                 expect(proxyRes.statusCode).toEqual(directRes.statusCode);
+        //                 expect(proxyRes.headers['content-type']).toEqual(directRes.headers['content-type']);
+        //                 expect(proxyRes.body).toEqual(directRes.body);
+        //                 done();
+        //             }, error => {
+        //                 console.error('error in direct get :', filetype, error);
+        //                 done.fail(`error happend in direct get ${filetype}`);
+        //             });
+        //         }, error => {
+        //             console.error('error in proxy get :', filetype, error);
+        //             done.fail(`error happend in proxy get ${filetype}`);
+        //         });
+        //     });
+        // });
     });
 }
